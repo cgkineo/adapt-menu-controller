@@ -1,2 +1,9 @@
 // contentObjects.json
 "_menuType": "cover"
+
+
+//screen size differentiation
+"_menuType": {
+  "large extralarge": "hotspot",
+  "small medium": "block"
+}
