@@ -100,12 +100,11 @@ define(function(require) {
     }
 
     var isMatchingScreenSize = function(screenSize, arr) {
-        if (_.indexOf(arr, screenSize.devicesize) > -1 &&
-            ( ( arr.indexOf("notouch") > -1 && !Modernizr.touch ) ||  ( _.indexOf(arr, "notouch") == -1 ) ) &&
-            ( ( arr.indexOf("touch") > -1 && Modernizr.touch ) ||  ( _.indexOf(arr, "touch") == -1 ) ) ) {
-            return true;
-        }
-        return false;
+        var isMatchingSize = _.indexOf(arr, screenSize.devicesize) > -1;
+        var isTouchMenuType = _.indexOf(arr, "touch") > -1;
+        var isNoTouchMenuType = _.indexOf(arr, "notouch") > -1;
+
+        return isMatchingSize && ((isNoTouchMenuType && !Modernizr.touch) || (!isNoTouchMenuType)) && ((isTouch && Modernizr.touch) || (!isTouch));
     }
 
 });
