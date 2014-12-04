@@ -104,7 +104,7 @@ define(function(require) {
         var isTouchMenuType = _.indexOf(arr, "touch") > -1;
         var isNoTouchMenuType = _.indexOf(arr, "notouch") > -1;
 
-        return isMatchingSize && ((isNoTouchMenuType && !Modernizr.touch) || (!isNoTouchMenuType)) && ((isTouch && Modernizr.touch) || (!isTouch));
+        return isMatchingSize && ((isNoTouchMenuType && !Modernizr.touch) || (!isNoTouchMenuType)) && ((isTouchMenuType && Modernizr.touch) || (!isTouchMenuType));
     }
 
 });
