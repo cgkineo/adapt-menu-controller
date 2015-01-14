@@ -1,8 +1,10 @@
-// contentObjects.json
+// contentObjects.json / course.json
 "_menuType": "cover"
 
 //screen size differentiation
 "_menuType": {
-  "large extralarge": "hotspot",
+  "large": "hotspot",
+  "small touch": "block",
+  "medium notouch": "hotspot",
   "small medium": "block"
 }

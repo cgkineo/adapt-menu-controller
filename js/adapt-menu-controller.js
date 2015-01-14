@@ -1,110 +1,114 @@
 /*
 * adapt-menu-controller
 * License - https://github.com/cgkineo/adapt-menu-controller/LICENSE
-* Maintainers - Dan Ghost <daniel.ghost@kineo.com>
+* Maintainers - Dan Ghost <daniel.ghost@kineo.com>, Oliver Foster<oliver.foster@kineo.com>
 */
 define(function(require) {
 
     var Adapt = require('coreJS/adapt');
 
-    var listenDeviceChange = false;
-    var currentModel = undefined;
-    Adapt.menuStore = {};
+    var MenuController = Backbone.View.extend({
 
+        initialize: function() {
+            this.listenToOnce(Adapt, "app:dataReady", this.onDataReady);
+        },
+
+        onDataReady: function() {
+            
+            //check if any menus have been registered
+            if (_.keys(Adapt.menuStore).length === 0) {
+                console.log("No menus registered, using old menu format");
+            } else {
+                console.log("Menus registered, disabling old menu format");
+                Adapt.off("router:menu");
+                this.listenTo(Adapt, "router:menu", this.onMenu)
+                this.listenTo(Adapt, "router:page", this.onPage);
+                this.listenTo(Adapt, "device:change", this.onDeviceChange);
+            }
+
+        },
+
+        onMenu: function(model) {
+            this.stopListening(Adapt, "device:change", this.onDeviceChange);
+
+            //fetch the type of menu that should be drawn
+            var menuType = model.get('_menuType');
+            menuType = this.compareScreenSize(menuType);
+
+            if (!menuType) {
+                console.log("No menu found for this route!");
+                return;
+            }
+
+            this.listenTo(Adapt, "device:change", this.onDeviceChange);
+
+            var MenuView = Adapt.menuStore[menuType];
+            var menuItem = new MenuView({model:model}).$el;
+            $('#wrapper').append(menuItem);
+
+        },
+
+        onPage: function() {
+            this.stopListening(Adapt, "device:change", this.onDeviceChange);
+        },
+
+        onDeviceChange: function() {
+            //dynamically change the menu by rerouting to current location
+            var to = window.location.hash == "" ? "#/" : window.location.hash;
+            Backbone.history.navigate(to, {trigger: true, replace: true});
+        },
+
+        compareScreenSize: function(settings) {
+            if (typeof settings == "object") {
+
+                /*
+                    takes:
+
+                    {
+                        "small medium large": "co-30",
+                        "medium large": "co-25",
+                        "small touch": "co-19",
+                        "small notouch": "co-21"
+                    }
+
+                    or any combination of the small medium and large names
+                    touch and notouch are exclusive parameters
+
+                */
+
+                var found = undefined;
+                for (var screenSize in settings) {
+
+                    var sizes =  screenSize.split(" ");
+
+                    var isMatchingSize = _.indexOf(sizes, Adapt.device.screenSize) > -1;
+                    var isTouchMenuType = _.indexOf(sizes, "touch") > -1;
+                    var isNoTouchMenuType = _.indexOf(sizes, "notouch") > -1;
+
+                    if ( isMatchingSize && ((isNoTouchMenuType && !Modernizr.touch) || (!isNoTouchMenuType)) && ((isTouchMenuType && Modernizr.touch) || (!isTouchMenuType)) ) {
+                        found = settings[screenSize];
+                        break;
+                    }
+                }
+                if (found === undefined) return false;
+                
+                return found;
+            }
+
+            //assume settings is a string id "co-30"
+            return settings;
+        }
+
+    });
+
+    //Allow menus to store their instanciators, like with components
+    Adapt.menuStore = {};
     Adapt.registerMenu = function(name, object) {
         if (Adapt.menuStore[name]) throw Error('This menu already exists in your project');
 
         Adapt.menuStore[name] = object;
     }
 
-    Adapt.on('router:menu', function(model) {        
-        listenDeviceChange = false;
-        currentModel = model;
-        drawMenu();
-    });
-
-    Adapt.on("router:page", function() {
-        listenDeviceChange = false;
-    });
-
-    Adapt.on("device:changed", function() {
-        if (listenDeviceChange) {
-            if (Adapt.location._currentId == "course") {
-                Backbone.history.navigate("#/", {trigger: true, replace: true});
-            } else {
-                Backbone.history.navigate("#/id/"+Adapt.location._currentId, {trigger: true, replace: true});
-            }
-        }
-    }); 
-
-
-    function drawMenu() {
-        var model = currentModel;
-        var menuType = model.get('_menuType');
-        if (menuType === undefined) return;
-
-
-        if (typeof menuType == "object") {
-            var found = undefined;
-            for (var screensize in menuType) {
-                if ( isMatchingScreenSize( getScreenSize(), screensize.split(" ") ) ) {
-                    found = menuType[screensize];
-                    break;
-                }
-            }
-            if (found === undefined) return false;
-            menuType = found;
-            listenDeviceChange = true;
-        }
-
-
-        var MenuView = Adapt.menuStore[menuType];
-        var menuItem = new MenuView({model:model}).$el;
-        $('#wrapper').append(menuItem);
-    }
-
-
-    var getScreenSize = function() {
-        var height = $(window).height();
-        var width = $(window).width();
-
-        var ratio = Math.floor(width/height*100)/100;
-
-        console.log(ratio);
-
-        var aspectratio = 
-            (ratio > (16/9))
-                ? "extrawidescreen"
-                : (ratio > (4/3))
-                    ? "widescreen"
-                    : "screen";
-
-        var devicesize = (
-            (width <= 520 || height <= 520 / ratio) 
-                ? "small" 
-                : (width <= 900 || height <= 900 / ratio) 
-                    ? "medium"
-                    : (width > 1024 || height > 1024 / ratio ) 
-                        ? "extralarge"  
-                        : "large"
-
-            );
-
-        return { 
-            height:height, 
-            width:width, 
-            ratio: ratio, 
-            aspectratio: aspectratio,
-            devicesize:devicesize
-        };
-    }
-
-    var isMatchingScreenSize = function(screenSize, arr) {
-        var isMatchingSize = _.indexOf(arr, screenSize.devicesize) > -1;
-        var isTouchMenuType = _.indexOf(arr, "touch") > -1;
-        var isNoTouchMenuType = _.indexOf(arr, "notouch") > -1;
-
-        return isMatchingSize && ((isNoTouchMenuType && !Modernizr.touch) || (!isNoTouchMenuType)) && ((isTouchMenuType && Modernizr.touch) || (!isTouchMenuType));
-    }
+    Adapt.menuController = new MenuController();
 
 });
