@@ -12,7 +12,9 @@ Add the "_menuType" attribute to the `contentObjects.json` file as required for 
     
     
 "_menuType": {
-  "large extralarge": "hotspot",
+  "large": "hotspot",
+  "small touch": "block",
+  "medium notouch": "hotspot",
   "small medium": "block"
 }
 ```
