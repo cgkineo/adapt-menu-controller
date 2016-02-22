@@ -1,17 +1,17 @@
 {
-  "name": "adapt-menu-controller",
-  "version": "0.0.1",
-  "homepage": "https://github.com/cgkineo/adapt-menu-controller",
-  "authors": [
-    "Dan Ghost <daniel.ghost@kineo.com>"
-  ],
-  "displayName" : "Menu Controller",
-  "extension" : "menu-controller",
-  "description": "Allows different menus to be used for contentObjects by adding the _menuType attribute to the contentObjects.json",
-  "main": "/js/adapt-menu-controller.js",
-  "keywords": [
-    "adapt-plugin",
-    "adapt-extension"
-  ],
-  "license": "GPLv3"
+    "name": "adapt-menu-controller",
+    "repository": "git://github.com/cgkineo/adapt-menu-controller",
+    "framework": "^2.0.0",
+    "version": "2.0.0",
+    "homepage": "https://github.com/cgkineo/adapt-menu-controller",
+    "issues": "https://github.com/cgkineo/adapt-menu-controller/issues/",
+    "displayName": "Menu Controller",
+    "extension": "menu-controller",
+    "description": "Allows different menus to be used for contentObjects by adding the _menuType attribute to the contentObjects.json",
+    "main": "/js/adapt-menu-controller.js",
+    "keywords": [
+        "adapt-plugin",
+        "adapt-extension"
+    ],
+    "license": "GPLv3"
 }
