@@ -1,11 +1,6 @@
-/*
-* adapt-menu-controller
-* License - https://github.com/cgkineo/adapt-menu-controller/LICENSE
-* Maintainers - Dan Ghost <daniel.ghost@kineo.com>, Oliver Foster<oliver.foster@kineo.com>
-*/
-define(function(require) {
-
-    var Adapt = require('coreJS/adapt');
+define([
+    'core/js/adapt'
+], function(Adapt) {
 
     var MenuController = Backbone.View.extend({
 
@@ -14,7 +9,6 @@ define(function(require) {
         },
 
         onDataReady: function() {
-            
             //check if any menus have been registered
             if (_.keys(Adapt.menuStore).length === 0) {
                 console.log("No menus registered, using old menu format");
@@ -23,13 +17,12 @@ define(function(require) {
                 Adapt.off("router:menu");
                 this.listenTo(Adapt, "router:menu", this.onMenu)
                 this.listenTo(Adapt, "router:page", this.onPage);
-                this.listenTo(Adapt, "device:change", this.onDeviceChange);
+                this.listenTo(Adapt, "device:changed", this.onDeviceChanged);
             }
-
         },
 
         onMenu: function(model) {
-            this.stopListening(Adapt, "device:change", this.onDeviceChange);
+            this.stopListening(Adapt, "device:changed", this.onDeviceChanged);
 
             //fetch the type of menu that should be drawn
             var menuType = model.get('_menuType');
@@ -40,19 +33,19 @@ define(function(require) {
                 return;
             }
 
-            this.listenTo(Adapt, "device:change", this.onDeviceChange);
+            this.listenTo(Adapt, "device:changed", this.onDeviceChanged);
 
             var MenuView = Adapt.menuStore[menuType];
-            var menuItem = new MenuView({model:model}).$el;
-            $('#wrapper').append(menuItem);
 
+            this.currentView = new MenuView({model:model});
+            $('#wrapper').append(this.currentView.$el);
         },
 
         onPage: function() {
-            this.stopListening(Adapt, "device:change", this.onDeviceChange);
+            this.stopListening(Adapt, "device:changed", this.onDeviceChanged);
         },
 
-        onDeviceChange: function() {
+        onDeviceChanged: function() {
             //dynamically change the menu by rerouting to current location
             var to = window.location.hash == "" ? "#/" : window.location.hash;
             Backbone.history.navigate(to, {trigger: true, replace: true});
@@ -60,10 +53,8 @@ define(function(require) {
 
         compareScreenSize: function(settings) {
             if (typeof settings == "object") {
-
                 /*
                     takes:
-
                     {
                         "small medium large": "co-30",
                         "medium large": "co-25",
@@ -73,7 +64,6 @@ define(function(require) {
 
                     or any combination of the small medium and large names
                     touch and notouch are exclusive parameters
-
                 */
 
                 var found = undefined;
@@ -85,7 +75,7 @@ define(function(require) {
                     var isTouchMenuType = _.indexOf(sizes, "touch") > -1;
                     var isNoTouchMenuType = _.indexOf(sizes, "notouch") > -1;
 
-                    if ( isMatchingSize && ((isNoTouchMenuType && !Modernizr.touch) || (!isNoTouchMenuType)) && ((isTouchMenuType && Modernizr.touch) || (!isTouchMenuType)) ) {
+                    if (isMatchingSize && ((isNoTouchMenuType && !Modernizr.touch) || (!isNoTouchMenuType)) && ((isTouchMenuType && Modernizr.touch) || (!isTouchMenuType))) {
                         found = settings[screenSize];
                         break;
                     }
@@ -103,6 +93,7 @@ define(function(require) {
 
     //Allow menus to store their instanciators, like with components
     Adapt.menuStore = {};
+
     Adapt.registerMenu = function(name, object) {
         if (Adapt.menuStore[name]) throw Error('This menu already exists in your project');
 
