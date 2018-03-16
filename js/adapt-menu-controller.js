@@ -10,6 +10,7 @@ define([
 
         onDataReady: function() {
             //check if any menus have been registered
+            this._deviceSize = Adapt.device.screenSize;
             if (_.keys(Adapt.menuStore).length === 0) {
                 console.log("No menus registered, using old menu format");
             } else {
@@ -47,6 +48,7 @@ define([
 
         onDeviceChanged: function() {
             //dynamically change the menu by rerouting to current location
+            if (Adapt.device.screenSize === this._deviceSize) return;
             var to = window.location.hash == "" ? "#/" : window.location.hash;
             Backbone.history.navigate(to, {trigger: true, replace: true});
         },
